@@ -7,6 +7,13 @@ import numpy as np
 import glob
 import scipy
 import re
+import sys
+
+
+args = sys.argv()
+
+print args
+
 
 # read in events
 rhino_root = '/Volumes/RHINO'
@@ -71,4 +78,8 @@ if n_sessions >= 23:
         word_events['Sleep'][mask]= ltpfr_sleep[index][0][0]
         word_events['Time'][mask]= ltpfr_start_time[index][0][0]
         word_events['Day'][mask]= ltpfr_day[index][0][0]
+
+save_path = rhino_root + '/scratch/tphan/variability/dataset.csv'
+word_events.to_csv(save_path, mode = 'a', header = False)
+
 
