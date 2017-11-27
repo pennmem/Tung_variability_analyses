@@ -32,7 +32,12 @@ for (i in 1:length(subjects))
     data_frame_subject[item_mask,recallability := avg_recall]
   }
   data_frame[indices, ] = data_frame_subject
-  
 }
 
 
+data_frame = as.data.frame(data_frame)
+
+data_frame['V1'] = NULL
+data_frame[colnames(data_frame)[1]] = NULL
+
+write.table(data_frame, 'ltpfr2_data_processed.csv', row.names = F)
