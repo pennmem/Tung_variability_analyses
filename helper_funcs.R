@@ -48,3 +48,22 @@ plot_vars = function(coeffs_list, vars_list, title = '', height = 10, width = 10
   test_result = apply(inter_session_vars,2,t.test)
   return(list(p =p, result = test_result))
 }
+
+
+plot_model = function(d, height = 10, width = 10, title = '')
+{
+  d = melt(d)
+  p = ggplot(d, aes(x = variable, y = value))  
+  p = p + geom_point() + theme_bw()
+  #p = p + geom_hline(yintercept = 0, linetype = 'dashed')
+  
+  p = p + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                             panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+  p = p + theme(text = element_text(size=15),
+                axis.text.x = element_text(angle=45, hjust=1), axis.title.x = element_blank(), 
+                axis.title.y = element_blank())
+  
+  ggsave(title, plot = p, device = NULL, path = NULL,
+         scale = 1, dpi = 500, width = width, height = height, units = "cm")
+  return(p)
+}

@@ -3,6 +3,7 @@ library(dplyr)
 library(lme4)
 library(ggplot2)
 source('helper_funcs.R')
+library(xtable)
 
 data_summary <- function(data, varname, groupnames){
   require(plyr)
@@ -74,6 +75,12 @@ ltpfr2['Sleep'] = scale(ltpfr2[['Sleep']])
 ltpfr2['recallability'] = scale(ltpfr2['recallability'])
 #ltpfr2['Block'] = factor(ltpfr2[['Block']])
 
+# correlation table 
+xtable(cor(ltpfr2[c('Alertness','recallability', 'Sleep', 'Time')]))
+
+
+
+
 
 n_total_lists = dim(ltpfr2)[1]/24
 subjects = unique(ltpfr2[['subject']])
@@ -82,13 +89,22 @@ subjects = unique(ltpfr2[['subject']])
 
 
 model_lists = list()
+r_squared_vec = c()
 
 for (subject in subjects)
 {
   indices_subject = which(ltpfr2[['subject']] == subject)
   subject_data = ltpfr2[indices_subject,]
   # model_subject = glm(recalled ~ serial_pos + list + session +  Alertness + Sleep + Time + Day + list +  recallability -1, data = subject_data, family = 'binomial')
-  model_subject = glm(recalled ~   session +list + Sleep + Alertness + Time + Day +recallability + serial_pos, data = subject_data, family = 'binomial')
+  #model_subject = glm(recalled ~   session +  list + Sleep + Alertness + Time + Day + recallability + serial_pos, data = subject_data, family = 'binomial')
+  model_subject = glm(recalled ~ list +  recallability + serial_pos, data = subject_data, family = 'binomial')
+  
+  model_subject_session = glm(recalled ~   list + recallability + serial_pos, data = subject_data, family = 'binomial')
+  null_deviance = summary(model_subject)$null.deviance
+  residual_deviance = summary(model_subject)$deviance
+  r_squared = 1 - residual_deviance/null_deviance
+  
+  r_squared_vec = c(r_squared_vec, r_squared)
   model_lists[[subject]] = model_subject
 }
 
