@@ -2,6 +2,7 @@ library(data.table)
 library(dplyr)
 library(lme4)
 library(ggplot2)
+source('helper_funcs.R')
 
 data_summary <- function(data, varname, groupnames){
   require(plyr)
@@ -47,7 +48,7 @@ scale_feature = function(x)
 
 assign_time = function(x)
 {
-  h = (x%%100)/60+ floor(x/100)
+  h = 12-(x%%100)/60- floor(x/100)
   return(h)
 }
 
@@ -65,11 +66,12 @@ ltpfr2['Day'] = factor(ltpfr2[['Day']])
 #ltpfr2['list'] = assign_list(ltpfr2[['list']])
 ltpfr2['list'] = factor(ltpfr2[['list']])
 
-ltpfr2['Alertness'] = scale(ltpfr2[['Alertness']])
+ltpfr2['Alertness'] = scale(ltpfr2[['Alertness']]+ rnorm(length(ltpfr2[['Alertness']]),0,0.05))
 
 
 ltpfr2['Time'] = scale(assign_time(ltpfr2[['Time']]))
 ltpfr2['Sleep'] = scale(ltpfr2[['Sleep']])
+ltpfr2['recallability'] = scale(ltpfr2['recallability'])
 #ltpfr2['Block'] = factor(ltpfr2[['Block']])
 
 
@@ -86,52 +88,26 @@ for (subject in subjects)
   indices_subject = which(ltpfr2[['subject']] == subject)
   subject_data = ltpfr2[indices_subject,]
   # model_subject = glm(recalled ~ serial_pos + list + session +  Alertness + Sleep + Time + Day + list +  recallability -1, data = subject_data, family = 'binomial')
-  model_subject = glm(recalled ~ -1 + session + Sleep + Alertness + Time + Day + list + Recallability + serial_pos, data = subject_data, family = 'binomial')
+  model_subject = glm(recalled ~   session +list + Sleep + Alertness + Time + Day +recallability + serial_pos, data = subject_data, family = 'binomial')
   model_lists[[subject]] = model_subject
 }
 
 
 # plot coefficients
 coeffs_list = lapply(model_lists, function(x){summary(x)$coefficients})
+
 vars_list = c('session', 'Sleep', 'Alertness', 'Time')
-
-inter_session_vars = data.frame()
-inter_session_p_vals = data.frame()
-for(j in 1:length(coeffs_list)){
-  coeffs = coeffs_list[[j]]
-  
-  inter_session_vars = rbind(inter_session_vars, coeffs[vars_list,][,'Estimate'])
-  inter_session_p_vals = rbind(inter_session_p_vals, coeffs[vars_list,][,4])
-  
-}
-
-names(inter_session_vars ) = vars_list
-names(inter_session_p_vals ) = vars_list
-
-p_adjust = function(x)
-{
-  return(p.adjust(x, "fdr"))
-}
-
-inter_session_p_vals = apply(inter_session_p_vals,2, p_adjust)
-
-inter_session_vars_melt = melt(inter_session_vars, ids = vars_list[2:4])
-inter_session_p_vals_melt = melt(inter_session_p_vals)
-inter_session_p_vals_melt['signif'] = (inter_session_p_vals_melt['value'] < 0.05)
+result = plot_vars(coeffs_list, vars_list, title = 'intersession.pdf', height = 10, width = 15)
 
 
-means = apply(inter_session_vars, 2,mean)
-ses = apply(inter_session_vars,2,sd)
+# interlist variability 
+coeffs_list = lapply(model_lists, function(x){summary(x)$coefficients})
+rownames(coeffs_list[[1]])
+vars_list = rownames(coeffs_list[[1]])[3:25]
 
-ggplot(inter_session_vars_melt, aes(x = variable, y = value)) + geom_point(aes( alpha = inter_session_p_vals_melt[['signif']]+0.1))+ theme_bw() + ylim(c(-2,2.0))
-
-# between sessions variability 
-apply(inter_session_vars,2,t.test)
-
-
-
-# between list variability 
-
-
+result= plot_vars(coeffs_list, vars_list, title = 'interlist.pdf', height = 10, width = 15)
+result$result
 
 # within list variability 
+vars_list = c('serial_pos', 'recallability', '')
+result = plot_vars(coeffs_list, vars_list, title = 'intralist.pdf', height = 10, width = 15)
