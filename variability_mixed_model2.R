@@ -80,8 +80,6 @@ xtable(cor(ltpfr2[c('Alertness','recallability', 'Sleep', 'Time')]))
 
 
 
-
-
 n_total_lists = dim(ltpfr2)[1]/24
 subjects = unique(ltpfr2[['subject']])
 

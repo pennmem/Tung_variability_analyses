@@ -12,6 +12,9 @@ plot_vars = function(coeffs_list, vars_list, title = '', height = 10, width = 10
   }
   
   names(inter_session_vars ) = vars_list
+  
+  inter_session_vars = apply(inter_session_vars,2, function(x){x-mean(x)})
+  
   names(inter_session_vars) = 2:24
   
   names(inter_session_p_vals ) = vars_list
@@ -39,7 +42,7 @@ plot_vars = function(coeffs_list, vars_list, title = '', height = 10, width = 10
 
   
   p = p + theme(text = element_text(size=15),
-                axis.text.x = element_text(angle=45, hjust=1), axis.title.x = element_blank(), 
+                axis.text.x = element_text(angle=60, hjust=1), axis.title.x = element_blank(), 
                 axis.title.y = element_blank()) 
 
   ggsave(title, plot = p, device = NULL, path = NULL,
@@ -52,15 +55,21 @@ plot_vars = function(coeffs_list, vars_list, title = '', height = 10, width = 10
 
 plot_model = function(d, height = 10, width = 10, title = '')
 {
-  d = melt(d)
-  p = ggplot(d, aes(x = variable, y = value))  
+  names = colnames(d)
+  d = apply(d,2,function(x){x -mean(x)})
+  colnames(d) = names
+  
+  d  = melt(d)
+  print(names(d))
+  
+  p = ggplot(d, aes(x = Var2, y = value))  
   p = p + geom_point() + theme_bw()
   #p = p + geom_hline(yintercept = 0, linetype = 'dashed')
   
   p = p + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
                              panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
-  p = p + theme(text = element_text(size=15),
-                axis.text.x = element_text(angle=45, hjust=1), axis.title.x = element_blank(), 
+  p = p + theme(text = element_text(size=20),
+                axis.text.x = element_text(angle=15, hjust=1), axis.title.x = element_blank(), 
                 axis.title.y = element_blank())
   
   ggsave(title, plot = p, device = NULL, path = NULL,
