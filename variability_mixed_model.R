@@ -93,6 +93,8 @@ subjects = unique(ltpfr2_prob[['subject']])
 r_vec = length(subjects)
 list_result = list()
 
+intersession_coefs = data.frame()
+intersession_p = data.frame()
 for(i in 1:length(subjects))
 {
   subject = subjects[i]
@@ -104,16 +106,40 @@ for(i in 1:length(subjects))
   SSE = sum(residuals[indices]^2)
   r = 1 - SSE/SST
   r_vec[i] = r 
-  predicted =inv.logit(residuals_subject + mean(y))
+  
+  #predicted =inv.logit(residuals_subject + mean(y))
+  predicted =inv.logit(y)
   subject_data[['predicted']] = predicted
   
   subject_data_group_by_Sess = group_by(subject_data, Sess)
   recall_prob = summarise( subject_data_group_by_Sess, recall_prob = mean(predicted))
   recall_prob = as.data.frame(recall_prob)
-  list_result[i] = list(recall = recall_prob, r = r)
+  #list_result[i] = list(recall = recall_prob, r = r)
+  
+  regression_model = lm(recalled ~ Time + Sleep + Alertness + session, subject_data)
+  intersession_coefs = rbind(intersession_coefs, summary(regression_model)$coefficients[,'Estimate'])
+  intersession_p = rbind(intersession_p, summary(regression_model)$coefficients[,4])
 }
-means = sapply(list_result, function(x){mean(x$recall)})
 
+
+names(intersession_coefs) = names(summary(regression_model)$coefficients[,'Estimate'])
+names(intersession_p) = names(summary(regression_model)$coefficients[,4])
+
+var_list = c('Session','Sleep', 'Alertness', 'Time')
+names(intersession_coefs)[5] = 'Session'
+names(intersession_p)[5] = 'Session'
+d = intersession_coefs[var_list]
+d_p = intersession_p[var_list]
+
+plot_model(intersession_coefs[var_list], intersession_p[var_list])
+
+d = intersession_coefs[c('Session','Sleep', 'Alertness', 'Time')]
+plot_model(d, plot_title = 'intersesion_vars.pdf')
+
+
+
+
+means = sapply(list_result, function(x){mean(x$recall)})
 sort_result = sort(means, index.return = TRUE)
 ix = sort_result$ix
 
@@ -136,9 +162,9 @@ p = p + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = el
 
 p = p + theme(text = element_text(size=15),
               axis.text.x = element_text(angle=0, hjust=1))
-p = p + xlab('Subject Number') + ylab("Predicted Recall") 
+p = p + xlab('Subject Number') + ylab("Recall Probability") 
 
-ggsave('residual_variablity_session.pdf', plot = p, device = NULL, path = NULL,
+ggsave('prob_variablity_session.pdf', plot = p, device = NULL, path = NULL,
        scale = 1, dpi = 500, width = 10, height = 10, units = "cm")
 
 
@@ -197,6 +223,9 @@ r_vec = length(subjects)
 list_result = list()
 auto_frame = data.frame()
 
+
+interlist_coefs = data.frame()
+
 for(i in 1:length(subjects))
 {
   subject = subjects[i]
@@ -209,7 +238,10 @@ for(i in 1:length(subjects))
   SSE = sum(residuals[indices]^2)
   r = 1 - SSE/SST
   r_vec[i] = r 
-  predicted =inv.logit(residuals_subject + mean(y))
+  
+  #predicted =inv.logit(residuals_subject + mean(y))
+  predicted = inv.logit(y)
+  
   subject_data[['predicted']] = predicted
   
   
@@ -244,6 +276,8 @@ for(i in 1:length(subjects))
   auto_temp = data.frame(resid = residuals_subject[indices_auto], lagged = residuals_subject[indices_lagged], prior_recall = subject_data[indices_lagged,'recalled'], subject = subject_data[['subject']][1])
   
   auto_frame = rbind(auto_frame, auto_temp)
+  regression_model = lm(recalled ~ Time + Sleep + Alertness + session, subject_data)
+  interlist_coefs = rbind(interlist_coefs, summary(regression_model)$coefficients[,'Estimate'])
 }
 
 auto_frame['subject'] = factor(auto_frame[['subject']])
@@ -281,7 +315,7 @@ p = p + theme(text = element_text(size=15),
               axis.text.x = element_text(angle=0, hjust=1))
 p = p + xlab('Subject Number') + ylab("Predicted Recall") 
 
-ggsave('residual_variablity_list.pdf', plot = p, device = NULL, path = NULL,
+ggsave('prob_variablity_list.pdf', plot = p, device = NULL, path = NULL,
        scale = 1, dpi = 500, width = 10, height = 10, units = "cm")
 
 

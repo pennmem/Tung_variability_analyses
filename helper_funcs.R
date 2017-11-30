@@ -53,17 +53,31 @@ plot_vars = function(coeffs_list, vars_list, title = '', height = 10, width = 10
 }
 
 
-plot_model = function(d, height = 10, width = 10, title = '')
+plot_model = function(d, d_p,  height = 10, width = 10, plot_title = '')
 {
   names = colnames(d)
-  d = apply(d,2,function(x){x -mean(x)})
+  #d = apply(d,2,function(x){x -mean(x)})
   colnames(d) = names
   
+  d = apply(d,2, function(x){x/3/sd(x)})
+  d_p = apply(d_p,2, function(x){p.adjust(x, method = 'fdr')})
+  
   d  = melt(d)
+  d_p = melt(d_p)
+  d['p'] = d_p['value']
+  d['signif'] = d[['p']] < 0.05
+  names(d) = c('number', 'var', 'value', 'p' ,'signif')
+  
   print(names(d))
   
-  p = ggplot(d, aes(x = Var2, y = value))  
-  p = p + geom_point() + theme_bw()
+  indices_signif = which(d['signif'] == TRUE)
+  indices_insignif = which(d['signif'] == FALSE)
+  d['signif'] = as.numeric(d[['signif']])
+  d[indices_insignif,'signif'] = 0.1
+  
+  
+  p = ggplot(d, aes(x = var ,y = value))  
+  p = p + geom_point(alpha = d[['signif']]) +  theme_bw() 
   #p = p + geom_hline(yintercept = 0, linetype = 'dashed')
   
   p = p + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
@@ -71,8 +85,8 @@ plot_model = function(d, height = 10, width = 10, title = '')
   p = p + theme(text = element_text(size=20),
                 axis.text.x = element_text(angle=15, hjust=1), axis.title.x = element_blank(), 
                 axis.title.y = element_blank())
-  
-  ggsave(title, plot = p, device = NULL, path = NULL,
+  print('pass here')
+  ggsave(plot_title, plot = p, device = NULL, path = NULL,
          scale = 1, dpi = 500, width = width, height = height, units = "cm")
   return(p)
 }
