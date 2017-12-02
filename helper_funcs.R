@@ -59,34 +59,34 @@ plot_model = function(d, d_p,  height = 10, width = 10, plot_title = '')
   #d = apply(d,2,function(x){x -mean(x)})
   colnames(d) = names
   
-  d = apply(d,2, function(x){x/3/sd(x)})
+  
   d_p = apply(d_p,2, function(x){p.adjust(x, method = 'fdr')})
   
   d  = melt(d)
   d_p = melt(d_p)
   d['p'] = d_p['value']
   d['signif'] = d[['p']] < 0.05
-  names(d) = c('number', 'var', 'value', 'p' ,'signif')
+  names(d) = c('var', 'value', 'p' ,'signif')
   
   print(names(d))
   
   indices_signif = which(d['signif'] == TRUE)
   indices_insignif = which(d['signif'] == FALSE)
   d['signif'] = as.numeric(d[['signif']])
-  d[indices_insignif,'signif'] = 0.1
+  d[indices_insignif,'signif'] = 0.05
   
   
   p = ggplot(d, aes(x = var ,y = value))  
-  p = p + geom_point(alpha = d[['signif']]) +  theme_bw() 
-  #p = p + geom_hline(yintercept = 0, linetype = 'dashed')
+  p = p + geom_point(alpha = d[['signif']]) +  theme_bw() + ylim(c(-1,1))
+  p = p + geom_hline(yintercept = 0, linetype = 'dashed', alpha = 0.2)
   
   p = p + theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
                              panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
   p = p + theme(text = element_text(size=20),
-                axis.text.x = element_text(angle=15, hjust=1), axis.title.x = element_blank(), 
+                axis.text.x = element_text(angle=25, hjust=1), axis.title.x = element_blank(), 
                 axis.title.y = element_blank())
   print('pass here')
-  ggsave(plot_title, plot = p, device = NULL, path = NULL,
+  ggsave( plot_title, plot = p, device = NULL, path = NULL,
          scale = 1, dpi = 500, width = width, height = height, units = "cm")
   return(p)
 }
