@@ -28,3 +28,7 @@ data_frame.to_csv('/scratch/tphan/variability/variability/ltpfr2_data.csv')
 ltpfr2_data_path = '/Volumes/RHINO/scratch/tphan/variability/variability/ltpfr2_data.csv'
 
 data_frame = pd.read_csv(ltpfr2_data_path)
+
+
+
+

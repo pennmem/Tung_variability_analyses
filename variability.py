@@ -8,6 +8,7 @@ import glob
 import scipy
 import re
 import sys
+import matplotlib.pyplot as plt
 
 
 # args = sys.argv
@@ -18,6 +19,7 @@ import sys
 # read in events
 rhino_root = '/Volumes/RHINO'
 from ptsa.data.readers import BaseEventReader
+from ptsa.data.readers import EEGReader
 import tables
 
 # grab all subjects
@@ -113,4 +115,5 @@ if n_sessions == 24:
         word_events.to_csv(save_path, mode = 'a', header = False)
     else:
         print 'nans exist check subject data'
-    #
+
+

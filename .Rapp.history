@@ -1,0 +1,2 @@
+load("/Users/tungphan/PycharmProjects/variability/model_session.rda")
+summary(model_session)
