@@ -35,8 +35,6 @@ print n_sessions
 n_sessions = len(np.unique(word_events.session))
 
 
-
-
 # read eegs
 events = BaseEventReader(filename=rhino_root+'/data/eeg/scalp/ltp/ltpFR2/behavioral/events/events_all_LTP377.mat',
                          use_reref_eeg=True,common_root='data').read()
@@ -55,8 +53,12 @@ eeg = EEGReader(events=words,channels=channels,start_time=0.3,end_time=1.6).read
 
 b_filter = ButterworthFilter(time_series = eeg, order = 4, freq_range = [58,62])
 eeg_filtered = b_filter.filter()
-eeg_filtered.data = np.ascontiguousarray(eeg_filtered.data)
+eeg_buffered = eeg_filtered.add_mirror_buffer(1.3)
+eeg_buffered.data = np.ascontiguousarray(eeg_buffered.data)
 
 
+import time
+pt = time.time()
 freqs = np.logspace(np.log10(3), np.log10(180), 50)
-pow_ev,_ = MorletWaveletFilterCpp(time_series= eeg_filtered, freqs = freqs, output = 'power', cpus = 1, verbose = False).filter()
+pow_ev,_ = MorletWaveletFilterCpp(time_series= eeg_buffered, freqs = freqs[0:1], output = 'power', cpus = 20, verbose = False).filter()
+run_time = time.time() - pt
